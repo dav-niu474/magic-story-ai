@@ -162,6 +162,35 @@
   box-shadow: 0 0 20px oklch(0.65 0.15 175 / 10%);
 }
 
+/* React Flow foreshadow edge animation */
+@keyframes dashmove {
+  to {
+    stroke-dashoffset: -12;
+  }
+}
+
+/* React Flow dark theme overrides */
+.react-flow__node {
+  cursor: pointer;
+}
+
+.react-flow__edge-path {
+  cursor: pointer;
+}
+
+.react-flow__minimap {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.react-flow__controls {
+  display: none;
+}
+
+.react-flow__attribution {
+  display: none !important;
+}
+
 /* Chapter Preview Panel Styles */
 .chapter-preview-body .chapter-paragraph {
   margin-bottom: 1em;

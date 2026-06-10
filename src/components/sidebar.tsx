@@ -1,21 +1,22 @@
 'use client';
 
-import { useAppStore, ViewType } from '@/lib/store';
+import { useAppStore, CoreModule, CreationSubView } from '@/lib/store';
 import { AGENTS, AgentType } from '@/lib/agents';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard,
-  Globe,
-  Users,
-  ListTree,
   BookOpen,
-  FlaskConical,
+  ListTree,
+  Route,
+  MessageSquare,
+  Archive,
+  Network,
+  PenTool,
   Settings,
   ChevronLeft,
   ChevronRight,
   Plus,
   Bot,
-  Route,
 } from 'lucide-react';
 
 interface SidebarProps {
@@ -26,15 +27,19 @@ interface SidebarProps {
   onDeleteProject: (id: string) => void;
 }
 
-const NAV_ITEMS: { id: ViewType; label: string; icon: React.ReactNode }[] = [
-  { id: 'dashboard', label: '工作台', icon: <LayoutDashboard size={18} /> },
-  { id: 'world', label: '世界观设定', icon: <Globe size={18} /> },
-  { id: 'characters', label: '角色管理', icon: <Users size={18} /> },
-  { id: 'outline', label: '大纲规划', icon: <ListTree size={18} /> },
-  { id: 'chapters', label: '章节创作', icon: <BookOpen size={18} /> },
-  { id: 'tracking', label: '追踪', icon: <Route size={18} /> },
-  { id: 'prompts', label: '提示词工坊', icon: <FlaskConical size={18} /> },
-  { id: 'settings', label: '设置', icon: <Settings size={18} /> },
+// 3 core modules
+const MODULE_ITEMS: { id: CoreModule; label: string; icon: React.ReactNode; color: string }[] = [
+  { id: 'creation', label: '创作中心', icon: <PenTool size={18} />, color: 'text-amber-400' },
+  { id: 'assets', label: '项目管理', icon: <Archive size={18} />, color: 'text-rose-400' },
+  { id: 'graph', label: '全景图谱', icon: <Network size={18} />, color: 'text-teal-400' },
+];
+
+// Creation center sub-views
+const CREATION_ITEMS: { id: CreationSubView; label: string; icon: React.ReactNode }[] = [
+  { id: 'chat', label: '工作台', icon: <LayoutDashboard size={16} /> },
+  { id: 'outline', label: '大纲规划', icon: <ListTree size={16} /> },
+  { id: 'chapters', label: '章节创作', icon: <BookOpen size={16} /> },
+  { id: 'tracking', label: '追踪', icon: <Route size={16} /> },
 ];
 
 export function Sidebar({
@@ -43,10 +48,10 @@ export function Sidebar({
   onSelectProject,
   onCreateProject,
 }: SidebarProps) {
-  const { currentView, setCurrentView, sidebarCollapsed, setSidebarCollapsed, activeAgent, setActiveAgent } = useAppStore();
+  const { coreModule, setCoreModule, creationSubView, setCreationSubView, sidebarCollapsed, setSidebarCollapsed, activeAgent, setActiveAgent } = useAppStore();
 
-  const handleNavClick = (view: ViewType) => {
-    setCurrentView(view);
+  const handleModuleClick = (mod: CoreModule) => {
+    setCoreModule(mod);
   };
 
   const handleAgentClick = (agentType: AgentType) => {
@@ -104,12 +109,13 @@ export function Sidebar({
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto custom-scrollbar py-2">
         <div className="px-2 space-y-0.5">
-          {NAV_ITEMS.map(item => {
-            const isActive = currentView === item.id;
+          {/* Core Modules */}
+          {MODULE_ITEMS.map(item => {
+            const isActive = coreModule === item.id;
             return (
               <button
                 key={item.id}
-                onClick={() => handleNavClick(item.id)}
+                onClick={() => handleModuleClick(item.id)}
                 className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-all duration-150 ${
                   isActive
                     ? 'bg-primary/15 text-primary font-medium'
@@ -117,15 +123,55 @@ export function Sidebar({
                 }`}
                 title={sidebarCollapsed ? item.label : undefined}
               >
-                <span className={`shrink-0 ${isActive ? 'text-primary' : ''}`}>{item.icon}</span>
+                <span className={`shrink-0 ${isActive ? item.color : ''}`}>{item.icon}</span>
                 {!sidebarCollapsed && (
-                  <span className="whitespace-nowrap truncate">
-                    {item.label}
-                  </span>
+                  <span className="whitespace-nowrap truncate">{item.label}</span>
                 )}
               </button>
             );
           })}
+
+          {/* Creation sub-views (show when creation module is active) */}
+          <AnimatePresence>
+            {coreModule === 'creation' && !sidebarCollapsed && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="ml-4 pl-2 border-l border-sidebar-border/50"
+              >
+                {CREATION_ITEMS.map(item => {
+                  const isActive = creationSubView === item.id;
+                  return (
+                    <button
+                      key={item.id}
+                      onClick={() => setCreationSubView(item.id)}
+                      className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-lg text-xs transition-all duration-150 ${
+                        isActive
+                          ? 'bg-primary/10 text-primary font-medium'
+                          : 'text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+                      }`}
+                    >
+                      {item.icon}
+                      <span className="whitespace-nowrap truncate">{item.label}</span>
+                    </button>
+                  );
+                })}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Settings */}
+          <div className="pt-2 mt-2 border-t border-sidebar-border/30">
+            <button
+              onClick={() => { /* Settings as creation sub-view for now */ }}
+              className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-all duration-150"
+              title={sidebarCollapsed ? '设置' : undefined}
+            >
+              <Settings size={18} className="shrink-0" />
+              {!sidebarCollapsed && <span className="whitespace-nowrap truncate">设置</span>}
+            </button>
+          </div>
         </div>
 
         {/* Agent Panel */}

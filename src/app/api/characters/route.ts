@@ -16,6 +16,7 @@ export async function GET(request: NextRequest) {
         fromRelations: { include: { toCharacter: true } },
         toRelations: { include: { fromCharacter: true } },
       },
+      orderBy: { createdAt: 'desc' },
     });
 
     const relationships = await db.characterRelationship.findMany({
@@ -33,7 +34,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { projectId, name, age, role, personality, appearance, background, arc } = body;
+    const { projectId, name, age, role, personality, appearance, background, arc, portraitPrompt, tags } = body;
 
     if (!projectId || !name) {
       return NextResponse.json({ error: 'projectId and name are required' }, { status: 400 });
@@ -49,6 +50,10 @@ export async function POST(request: NextRequest) {
         appearance: appearance || '',
         background: background || '',
         arc: arc || '',
+        portraitPrompt: portraitPrompt || '',
+        tags: tags ? JSON.stringify(tags) : '[]',
+        isFavorite: false,
+        version: 1,
       },
     });
 
@@ -62,23 +67,29 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, name, age, role, personality, appearance, background, arc } = body;
+    const { id, name, age, role, personality, appearance, background, arc, portraitUrl, portraitPrompt, tags, isFavorite, version } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'Character ID is required' }, { status: 400 });
     }
 
+    const data: Record<string, unknown> = {};
+    if (name !== undefined) data.name = name;
+    if (age !== undefined) data.age = age;
+    if (role !== undefined) data.role = role;
+    if (personality !== undefined) data.personality = personality;
+    if (appearance !== undefined) data.appearance = appearance;
+    if (background !== undefined) data.background = background;
+    if (arc !== undefined) data.arc = arc;
+    if (portraitUrl !== undefined) data.portraitUrl = portraitUrl;
+    if (portraitPrompt !== undefined) data.portraitPrompt = portraitPrompt;
+    if (isFavorite !== undefined) data.isFavorite = isFavorite;
+    if (tags !== undefined) data.tags = typeof tags === 'string' ? tags : JSON.stringify(tags);
+    if (version !== undefined) data.version = version;
+
     const character = await db.character.update({
       where: { id },
-      data: {
-        ...(name !== undefined && { name }),
-        ...(age !== undefined && { age }),
-        ...(role !== undefined && { role }),
-        ...(personality !== undefined && { personality }),
-        ...(appearance !== undefined && { appearance }),
-        ...(background !== undefined && { background }),
-        ...(arc !== undefined && { arc }),
-      },
+      data,
     });
 
     return NextResponse.json(character);

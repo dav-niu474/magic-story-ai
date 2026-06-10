@@ -25,7 +25,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { projectId, name, description, rules, type, order } = body;
+    const { projectId, name, description, rules, type, order, tags } = body;
 
     if (!projectId || !name) {
       return NextResponse.json({ error: 'projectId and name are required' }, { status: 400 });
@@ -39,6 +39,8 @@ export async function POST(request: NextRequest) {
         rules: rules || '',
         type: type || 'background',
         order: order ?? 0,
+        tags: tags ? JSON.stringify(tags) : '[]',
+        version: 1,
       },
     });
 
@@ -52,21 +54,24 @@ export async function POST(request: NextRequest) {
 export async function PUT(request: NextRequest) {
   try {
     const body = await request.json();
-    const { id, name, description, rules, type, order } = body;
+    const { id, name, description, rules, type, order, tags, version } = body;
 
     if (!id) {
       return NextResponse.json({ error: 'World setting ID is required' }, { status: 400 });
     }
 
+    const data: Record<string, unknown> = {};
+    if (name !== undefined) data.name = name;
+    if (description !== undefined) data.description = description;
+    if (rules !== undefined) data.rules = rules;
+    if (type !== undefined) data.type = type;
+    if (order !== undefined) data.order = order;
+    if (tags !== undefined) data.tags = typeof tags === 'string' ? tags : JSON.stringify(tags);
+    if (version !== undefined) data.version = version;
+
     const worldSetting = await db.worldSetting.update({
       where: { id },
-      data: {
-        ...(name !== undefined && { name }),
-        ...(description !== undefined && { description }),
-        ...(rules !== undefined && { rules }),
-        ...(type !== undefined && { type }),
-        ...(order !== undefined && { order }),
-      },
+      data,
     });
 
     return NextResponse.json(worldSetting);

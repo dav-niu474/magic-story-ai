@@ -26,7 +26,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { projectId, agentType, action, input, output } = body;
+    const { projectId, agentType, action, input, output, toolCalls } = body;
 
     if (!projectId || !agentType) {
       return NextResponse.json({ error: 'projectId and agentType are required' }, { status: 400 });
@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
         action: action || '',
         input: input || '',
         output: output || '',
+        toolCalls: toolCalls || '[]',
       },
     });
 

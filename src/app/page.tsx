@@ -3,17 +3,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { useAppStore } from '@/lib/store';
 import { Sidebar } from '@/components/sidebar';
-import { Dashboard } from '@/components/dashboard';
-import { WorldSetup } from '@/components/world-setup';
-import { CharacterManager } from '@/components/character-manager';
-import { OutlineEditor } from '@/components/outline-editor';
-import { ChapterEditor } from '@/components/chapter-editor';
-import { PromptLab } from '@/components/prompt-lab';
-import { SettingsPanel } from '@/components/settings-panel';
-import { AgentChat } from '@/components/agent-chat';
-import { TrackingPanel } from '@/components/tracking-panel';
+import { AssetCenter } from '@/components/asset-center';
+import { CreationCenter } from '@/components/creation-center';
+import { PanoramaGraph } from '@/components/panorama-graph';
 import { ProjectWizard } from '@/components/project-wizard';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Archive, Network, PenTool } from 'lucide-react';
 
 interface Project {
   id: string;
@@ -29,10 +24,15 @@ interface Project {
   };
 }
 
+const MODULE_CONFIG = {
+  creation: { label: '创作中心', icon: PenTool, color: 'text-amber-400' },
+  assets: { label: '项目管理', icon: Archive, color: 'text-rose-400' },
+  graph: { label: '全景图谱', icon: Network, color: 'text-teal-400' },
+};
+
 export default function NovelPlatform() {
-  const { currentView, currentProjectId, setCurrentProjectId, activeAgent } = useAppStore();
+  const { currentProjectId, setCurrentProjectId, coreModule } = useAppStore();
   const [projects, setProjects] = useState<Project[]>([]);
-  const [showNewProject, setShowNewProject] = useState(false);
   const [showWizard, setShowWizard] = useState(false);
 
   const fetchProjects = useCallback(async () => {
@@ -53,25 +53,6 @@ export default function NovelPlatform() {
   useEffect(() => {
     fetchProjects();
   }, [fetchProjects]);
-
-  const handleCreateProject = async (title: string, genre: string, description: string) => {
-    if (!title.trim()) return;
-    try {
-      const res = await fetch('/api/projects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ title, genre, description }),
-      });
-      if (res.ok) {
-        const project = await res.json();
-        setProjects(prev => [project, ...prev]);
-        setCurrentProjectId(project.id);
-        setShowNewProject(false);
-      }
-    } catch (e) {
-      console.error('Failed to create project:', e);
-    }
-  };
 
   const handleDeleteProject = async (id: string) => {
     try {
@@ -96,7 +77,7 @@ export default function NovelPlatform() {
 
   const currentProject = projects.find(p => p.id === currentProjectId);
 
-  const renderView = () => {
+  const renderMainContent = () => {
     if (!currentProjectId) {
       return (
         <div className="flex flex-col items-center justify-center h-full min-h-[60vh] text-center">
@@ -115,25 +96,15 @@ export default function NovelPlatform() {
       );
     }
 
-    switch (currentView) {
-      case 'dashboard':
-        return <Dashboard project={currentProject} onDeleteProject={handleDeleteProject} />;
-      case 'world':
-        return <WorldSetup projectId={currentProjectId} />;
-      case 'characters':
-        return <CharacterManager projectId={currentProjectId} />;
-      case 'outline':
-        return <OutlineEditor projectId={currentProjectId} />;
-      case 'chapters':
-        return <ChapterEditor projectId={currentProjectId} />;
-      case 'tracking':
-        return <TrackingPanel projectId={currentProjectId} />;
-      case 'prompts':
-        return <PromptLab projectId={currentProjectId} />;
-      case 'settings':
-        return <SettingsPanel project={currentProject} onUpdate={fetchProjects} />;
+    switch (coreModule) {
+      case 'creation':
+        return <CreationCenter projectId={currentProjectId} />;
+      case 'assets':
+        return <AssetCenter projectId={currentProjectId} />;
+      case 'graph':
+        return <PanoramaGraph projectId={currentProjectId} />;
       default:
-        return <Dashboard project={currentProject} onDeleteProject={handleDeleteProject} />;
+        return <CreationCenter projectId={currentProjectId} />;
     }
   };
 
@@ -155,6 +126,10 @@ export default function NovelPlatform() {
               <>
                 <span className="text-sm font-medium text-foreground">{currentProject.title}</span>
                 <span className="text-xs text-muted-foreground bg-secondary px-2 py-0.5 rounded-full">{currentProject.genre}</span>
+                {/* Module indicator */}
+                <span className="text-xs text-muted-foreground flex items-center gap-1">
+                  / {(() => { const cfg = MODULE_CONFIG[coreModule]; const Icon = cfg.icon; return <><Icon size={12} className={cfg.color} />{cfg.label}</>; })()}
+                </span>
               </>
             )}
           </div>
@@ -171,27 +146,21 @@ export default function NovelPlatform() {
         </header>
 
         {/* Main content */}
-        <div className="flex-1 flex overflow-hidden">
-          <div className="flex-1 overflow-y-auto custom-scrollbar">
-            <div className="p-4 md:p-6">
-              {renderView()}
-            </div>
-          </div>
-
-          {/* Agent Chat Panel */}
-          {activeAgent && currentProjectId && (
-            <AgentChat projectId={currentProjectId} agentType={activeAgent} />
-          )}
+        <div className="flex-1 overflow-hidden">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={coreModule}
+              initial={{ opacity: 0, x: 8 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -8 }}
+              transition={{ duration: 0.15 }}
+              className="h-full"
+            >
+              {renderMainContent()}
+            </motion.div>
+          </AnimatePresence>
         </div>
       </main>
-
-      {/* Simple Create Project Dialog (fallback) */}
-      {showNewProject && (
-        <SimpleCreateDialog
-          onConfirm={(title, genre, desc) => handleCreateProject(title, genre, desc)}
-          onCancel={() => setShowNewProject(false)}
-        />
-      )}
 
       {/* Project Wizard */}
       {showWizard && (
@@ -200,84 +169,6 @@ export default function NovelPlatform() {
           onCancel={() => setShowWizard(false)}
         />
       )}
-    </div>
-  );
-}
-
-// Simple create dialog as fallback
-function SimpleCreateDialog({ onConfirm, onCancel }: { onConfirm: (title: string, genre: string, desc: string) => void; onCancel: () => void }) {
-  const [newTitle, setNewTitle] = useState('');
-  const [newGenre, setNewGenre] = useState('玄幻系统修仙');
-  const [newDesc, setNewDesc] = useState('');
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        className="bg-card border border-border rounded-xl p-6 w-full max-w-md mx-4 shadow-2xl"
-      >
-        <h3 className="text-lg font-bold text-foreground mb-4">快速创建项目</h3>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm text-muted-foreground mb-1">小说标题</label>
-            <input
-              type="text"
-              value={newTitle}
-              onChange={e => setNewTitle(e.target.value)}
-              placeholder="输入你的小说标题..."
-              className="w-full px-3 py-2 bg-secondary border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-              autoFocus
-            />
-          </div>
-          <div>
-            <label className="block text-sm text-muted-foreground mb-1">类型</label>
-            <select
-              value={newGenre}
-              onChange={e => setNewGenre(e.target.value)}
-              className="w-full px-3 py-2 bg-secondary border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50"
-            >
-              <option value="玄幻系统修仙">⚔️ 玄幻系统修仙</option>
-              <option value="都市重生">🔄 都市重生</option>
-              <option value="脑洞网文">💡 脑洞网文</option>
-              <option value="都市修仙">🏙️ 都市修仙</option>
-              <option value="都市高武">👊 都市高武</option>
-              <option value="末日系统">🧟 末日系统</option>
-              <option value="霸总">👑 霸总</option>
-              <option value="后悔流">😢 后悔流</option>
-              <option value="无敌文">💪 无敌文</option>
-              <option value="历史架空">📜 历史架空</option>
-              <option value="东方玄幻">🐉 东方玄幻</option>
-              <option value="策略经营">🏰 策略经营</option>
-            </select>
-          </div>
-          <div>
-            <label className="block text-sm text-muted-foreground mb-1">简介</label>
-            <textarea
-              value={newDesc}
-              onChange={e => setNewDesc(e.target.value)}
-              placeholder="简要描述你的故事..."
-              rows={3}
-              className="w-full px-3 py-2 bg-secondary border border-border rounded-lg text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 resize-none"
-            />
-          </div>
-        </div>
-        <div className="flex gap-3 mt-6">
-          <button
-            onClick={onCancel}
-            className="flex-1 px-4 py-2 bg-secondary text-secondary-foreground rounded-lg text-sm hover:bg-secondary/80 transition-colors"
-          >
-            取消
-          </button>
-          <button
-            onClick={() => onConfirm(newTitle, newGenre, newDesc)}
-            disabled={!newTitle.trim()}
-            className="flex-1 px-4 py-2 bg-primary text-primary-foreground rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            创建项目
-          </button>
-        </div>
-      </motion.div>
     </div>
   );
 }

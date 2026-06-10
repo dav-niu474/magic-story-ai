@@ -7,14 +7,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model Project {
-  id          String    @id @default(cuid())
-  title       String
-  genre       String    @default("玄幻系统修仙")
-  description String    @default("")
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
+// ==========================================
+// 核心项目模型
+// ==========================================
 
+model Project {
+  id          String   @id @default(cuid())
+  title       String
+  genre       String   @default("玄幻系统修仙")
+  description String   @default("")
+  coverImage  String   @default("")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
   worldSettings       WorldSetting[]
   characters          Character[]
   characterRelations  CharacterRelationship[]
@@ -24,30 +30,48 @@ model Project {
   agentLogs           AgentLog[]
   storyStates         StoryState[]
   foreshadowings      Foreshadowing[]
+  storyNodes          StoryNode[]
+  storyEdges          StoryEdge[]
+  scenes              Scene[]
+  plots               Plot[]
+  assetLinks          ProjectAssetLink[]
 }
 
-model WorldSetting {
-  id          String  @id @default(cuid())
-  projectId   String
-  name        String
-  description String  @default("")
-  rules       String  @default("")
-  type        String  @default("background")
-  order       Int     @default(0)
+// ==========================================
+// 模块二：项目管理 - 五类资产
+// ==========================================
+
+/// 大纲资产
+model Outline {
+  id        String  @id @default(cuid())
+  projectId String
+  content   String  @default("")
+  version   Int     @default(1)
+  tags      String  @default("[]") // JSON array of tags
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
 
+/// 角色资产（含AI生成图片）
 model Character {
-  id          String  @id @default(cuid())
-  projectId   String
-  name        String
-  age         String  @default("")
-  role        String  @default("主角")
-  personality String  @default("")
-  appearance  String  @default("")
-  background  String  @default("")
-  arc         String  @default("")
+  id              String  @id @default(cuid())
+  projectId       String
+  name            String
+  age             String  @default("")
+  role            String  @default("主角")
+  personality     String  @default("")
+  appearance      String  @default("")
+  background      String  @default("")
+  arc             String  @default("")
+  portraitUrl     String  @default("")  // AI生成的角色图片URL (base64 or URL)
+  portraitPrompt  String  @default("")  // 自定义风格提示词
+  tags            String  @default("[]") // JSON array of tags
+  isFavorite      Boolean @default(false)
+  version         Int     @default(1)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
@@ -68,14 +92,72 @@ model CharacterRelationship {
   toCharacter   Character @relation("ToCharacter", fields: [toCharacterId], references: [id], onDelete: Cascade)
 }
 
-model Outline {
-  id        String  @id @default(cuid())
-  projectId String
-  content   String  @default("")
-  version   Int     @default(1)
+/// 剧情资产
+model Plot {
+  id          String   @id @default(cuid())
+  projectId   String
+  name        String
+  description String   @default("")
+  plotType    String   @default("main") // main | sub | task | dungeon | scene | event
+  priority    Int      @default(0)
+  status      String   @default("planned") // planned | active | completed | abandoned
+  tags        String   @default("[]")
+  order       Int      @default(0)
+  version     Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
 }
+
+/// 场景资产
+model Scene {
+  id          String   @id @default(cuid())
+  projectId   String
+  name        String
+  description String   @default("")
+  location    String   @default("")  // 场景地点
+  atmosphere  String   @default("")  // 氛围描述
+  timeOfDay   String   @default("")  // 时间段
+  tags        String   @default("[]")
+  order       Int      @default(0)
+  version     Int      @default(1)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+/// 世界观资产
+model WorldSetting {
+  id          String  @id @default(cuid())
+  projectId   String
+  name        String
+  description String  @default("")
+  rules       String  @default("")
+  type        String  @default("background")
+  order       Int     @default(0)
+  tags        String  @default("[]")
+  version     Int     @default(1)
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+/// 跨项目资产链接（浅拷贝引用）
+model ProjectAssetLink {
+  id           String   @id @default(cuid())
+  projectId    String
+  assetType    String   // outline | character | plot | scene | world
+  sourceAssetId String  // 原资产ID
+  sourceProjectId String // 原项目ID
+  createdAt    DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// 模块一：创作中心 - 章节与对话
+// ==========================================
 
 model Chapter {
   id             String  @id @default(cuid())
@@ -122,6 +204,50 @@ model Foreshadowing {
   chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
 }
 
+// ==========================================
+// 模块三：全景图谱 - 叙事地图
+// ==========================================
+
+/// 故事节点
+model StoryNode {
+  id          String   @id @default(cuid())
+  projectId   String
+  nodeType    String   @default("main") // main | sub | task | dungeon | scene | event
+  title       String
+  description String   @default("")
+  positionX   Float    @default(0)
+  positionY   Float    @default(0)
+  metadata    String   @default("{}") // JSON: 关联角色ID、场景ID、伏笔等
+  color       String   @default("")   // 自定义颜色
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sourceEdges StoryEdge[] @relation("SourceNode")
+  targetEdges StoryEdge[] @relation("TargetNode")
+}
+
+/// 故事连线
+model StoryEdge {
+  id          String   @id @default(cuid())
+  projectId   String
+  sourceId    String
+  targetId    String
+  label       String   @default("")
+  edgeType    String   @default("causal") // causal | temporal | character | foreshadow
+  metadata    String   @default("{}")
+  createdAt   DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  sourceNode StoryNode @relation("SourceNode", fields: [sourceId], references: [id], onDelete: Cascade)
+  targetNode StoryNode @relation("TargetNode", fields: [targetId], references: [id], onDelete: Cascade)
+}
+
+// ==========================================
+// 共享模型
+// ==========================================
+
 model PromptTemplate {
   id        String  @id @default(cuid())
   projectId String
@@ -140,6 +266,7 @@ model AgentLog {
   action    String
   input     String   @default("")
   output    String   @default("")
+  toolCalls String   @default("[]") // JSON: 工具调用记录
   createdAt DateTime @default(now())
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)

@@ -181,3 +181,187 @@ Stage Summary:
 - Platform fully verified and operational
 - All 8 new features working correctly
 - No critical issues found
+
+---
+Task ID: 10
+Agent: API Routes Developer
+Task: Create/update API routes for new Prisma models (Plot, Scene, StoryNode, StoryEdge, ProjectAssetLink, generate-portrait) and update existing routes (characters, agent-logs)
+
+Work Log:
+- Updated /api/characters/route.ts - added portraitUrl, portraitPrompt, tags, isFavorite, version fields to POST and PUT handlers
+- Updated /api/agent-logs/route.ts - added toolCalls field to POST handler
+- Created /api/plots/route.ts - Full CRUD (GET with projectId filter, POST, PUT, DELETE) for Plot model with plotType, priority, status, tags, order, version fields
+- Created /api/scenes/route.ts - Full CRUD for Scene model with location, atmosphere, timeOfDay, tags, order, version fields
+- Created /api/story-nodes/route.ts - Full CRUD for StoryNode model with nodeType, positionX/Y, metadata (JSON), color, order; GET includes sourceEdges and targetEdges relations
+- Created /api/story-edges/route.ts - Full CRUD for StoryEdge model with edgeType, metadata; GET includes sourceNode and targetNode relations; POST requires sourceId and targetId
+- Created /api/asset-links/route.ts - CRUD for ProjectAssetLink with duplicate detection (409 on existing); GET supports optional assetType filter; no PUT (links are create/delete only)
+- Created /api/generate-portrait/route.ts - POST endpoint using z-ai-web-dev-sdk for AI image generation, returns b64_json, url, and revised_prompt
+- All routes follow existing code style (NextRequest/NextResponse, db from @/lib/db, spread operator for partial updates)
+- Lint check passed with zero errors
+- Database push confirmed in sync with Prisma schema
+
+Stage Summary:
+- 6 new API routes created, 2 existing routes updated
+- All routes follow consistent patterns matching existing codebase style
+- Total API routes now: 19 (plots, scenes, story-nodes, story-edges, asset-links, generate-portrait added)
+
+---
+Task ID: 10
+Agent: Main Agent
+Task: Build the Creation Center (创作中心) module - the core interaction engine
+
+Work Log:
+- Created /src/lib/universal-agent.ts with comprehensive system prompt for "墨灵" (Universal Agent)
+  - Covers 6 capabilities: planning, writing, editing, review, character design, world-building
+  - Emotion-first methodology (先定情绪，再定故事)
+  - 6-Gate anti-AI principles integrated
+  - Tool calling protocol with [TOOL_CALL]...[/TOOL_CALL] format
+  - parseToolCalls() utility to extract tool calls from agent responses
+- Created /src/components/tool-panel.tsx (collapsible tool hot-swap panel)
+  - 13 tools organized by 5 categories (outline, character, world, scene, graph)
+  - Each tool has icon, name, description, enable/disable switch
+  - Collapsible with Framer Motion animation
+  - Shows enabled tool count and bulk toggle
+- Created /src/components/creation-chat.tsx (Universal Agent Chat - core)
+  - 3-section layout: left tool panel, center chat, right side panel
+  - Chat messages with streaming support (SSE)
+  - Tool call cards: parsed from agent response, expandable, executable
+  - User messages right-aligned (primary/amber), assistant left-aligned (card/dark)
+  - Input area with Enter to send, Shift+Enter for newline
+  - Quick-start suggestion cards for empty state
+  - Side panel support: preview, antiAi, adversarial
+  - Tool execution: routes to appropriate API endpoints
+- Created /src/components/creation-center.tsx (main container)
+  - Tab bar switching between chat, chapters, outline, tracking sub-views
+  - Reuses existing ChapterEditor, OutlineEditor, TrackingPanel components
+  - Context indicator showing current mode
+- Refactored /src/app/page.tsx to 3-module architecture
+  - Creation Center (创作中心) - core interaction engine
+  - Assets (项目管理) - world settings, characters, tracking
+  - Graph (全景图谱) - placeholder for visualization module
+  - Collapsible sidebar with project selector and module navigation
+  - Asset sub-views expandable under assets module
+- Updated /src/lib/store.ts with backward compatibility
+  - Added currentView/setCurrentView and activeAgent/setActiveAgent
+  - VIEW_MAP maps old view names to new module + sub-view
+  - setActiveAgent auto-redirects to creation center chat
+- No changes needed to /api/ai/route.ts (already supports custom systemPrompt)
+- Lint passes with 0 errors, 0 warnings
+
+Stage Summary:
+- Creation Center module fully built as the core interaction engine
+- Universal Agent "墨灵" drives all creative tasks through conversation + tool-calling
+- 3-module navigation replaces old 7-view architecture
+- Backward compatibility maintained for all existing components
+- All lint checks pass, page loads correctly
+
+---
+Task ID: 11
+Agent: Full-stack Developer Subagent
+Task: Build the Panorama Graph (全景图谱) module - a visual narrative map using React Flow
+
+Work Log:
+- Created /src/app/api/story-nodes/route.ts - Full CRUD API for StoryNode model (GET, POST, PUT, DELETE)
+- Created /src/app/api/story-edges/route.ts - Full CRUD API for StoryEdge model (GET, POST, PUT, DELETE)
+- Created /src/lib/graph-layout.ts - Layout algorithms for auto-arranging nodes
+  - Topological sort based on edge connections (Kahn's algorithm)
+  - Grid arrangement: main nodes center, sub/task nodes above/below
+  - Force-directed layout alternative for undirected graphs
+  - Function signatures: layoutNodes(nodes, edges) and forceDirectedLayout(nodes, edges, iterations)
+- Created /src/components/story-node.tsx - Custom React Flow node component
+  - Color-coded border/background based on nodeType (using NODE_TYPE_CONFIG)
+  - Title + 2-line truncated description
+  - Node type badge in top-right corner
+  - Metadata indicator icons (characters, scenes, foreshadowing)
+  - Subtle glow effect on hover per node type
+  - Selected state with brighter border and ring
+  - ~200px wide, auto height
+  - Input/Output Handle for connections
+  - Wrapped in memo for performance (defined outside component)
+- Created /src/components/story-edge.tsx - Custom React Flow edge component
+  - Animated dashed line for foreshadow type (CSS dashmove animation)
+  - Label displayed at midpoint with colored badge
+  - Color based on edgeType (causal=blue, temporal=emerald, character=rose, foreshadow=amber)
+  - Hover opacity effect, selected state with brighter stroke
+- Created /src/components/graph-toolbar.tsx - Top toolbar component
+  - 6 node type filter toggle buttons (using NODE_TYPE_CONFIG colors)
+  - Zoom in/out/fit view controls
+  - Auto-layout button (triggers layoutNodes)
+  - Add node button (opens form dialog)
+  - Search nodes input with escape-to-close
+- Created /src/components/node-detail-panel.tsx - Slide-in detail panel
+  - Framer Motion spring animation from right
+  - Shows node title, type badge, description
+  - Connected nodes list with navigation
+  - Associated characters, scenes, foreshadowing from metadata JSON
+  - Position info (X/Y coordinates)
+  - Edit button, Delete button with confirmation, "在创作中心打开" button
+- Created /src/components/panorama-graph.tsx - Main container component
+  - React Flow canvas with dark dot grid background
+  - MiniMap in bottom-right corner with node type colors
+  - Full data flow: fetch → convert → render → interact → save
+  - DB-to-Flow conversion: dbNodeToFlowNode, dbEdgeToFlowEdge
+  - Node drag stop saves position back to API
+  - On connect creates new edge via API
+  - Node click selects and shows detail panel
+  - Pane click deselects
+  - Edge deletion with API call
+  - Filter by node type using store graphFilter
+  - Search nodes by title/description
+  - Auto-layout with position persistence
+  - Add/Edit node dialogs with type selector
+  - Delete with confirmation
+  - Empty state with illustration
+  - Custom nodeTypes and edgeTypes registered outside component for React Flow v12 compatibility
+- Updated /src/app/page.tsx - Replaced graph placeholder with <PanoramaGraph projectId={...} />
+- Updated /src/app/globals.css - Added React Flow CSS overrides:
+  - @keyframes dashmove for foreshadow edge animation
+  - Dark theme overrides for minimap, controls, attribution
+- Created sample data: 5 story nodes + 4 story edges for testing
+- All lint checks pass (0 errors, 0 warnings)
+- API endpoints verified: story-nodes and story-edges both return correct data
+
+Stage Summary:
+- Panorama Graph module fully implemented with React Flow v12
+- 6 new files created: story-node.tsx, story-edge.tsx, graph-toolbar.tsx, node-detail-panel.tsx, panorama-graph.tsx, graph-layout.ts
+- 2 API routes created: /api/story-nodes, /api/story-edges
+- Full CRUD operations on nodes and edges with position persistence
+- Custom visual styling for 6 node types and 4 edge types
+- Auto-layout algorithm with topological sort
+- Search, filter, zoom, and navigation features
+- Detail panel with Framer Motion slide animation
+
+---
+Task ID: 12
+Agent: Full-stack Developer
+Task: Build the Project Management (项目管理) module - the asset management hub
+
+Work Log:
+- Created /api/plots/route.ts - Full CRUD for Plot model (name, description, plotType, priority, status, tags, order, version)
+- Created /api/scenes/route.ts - Full CRUD for Scene model (name, description, location, atmosphere, timeOfDay, tags, order, version)
+- Created /api/generate-portrait/route.ts - POST endpoint using z-ai-web-dev-sdk for AI portrait generation with style prompt
+- Created /api/asset-links/route.ts - Full CRUD for ProjectAssetLink with shallow-copy import (duplicate detection with 409)
+- Updated /api/characters/route.ts - Added portraitUrl, portraitPrompt, tags (JSON), isFavorite, version fields
+- Updated /api/world-settings/route.ts - Added tags (JSON), version fields
+- Created /src/components/asset-center.tsx - Main container with left sub-nav (总览/角色/剧情/场景/世界观/资产库)
+- Created /src/components/asset-overview.tsx - Dashboard with 5 stat cards (rose/amber/orange/teal/blue), recent activity, quick actions
+- Created /src/components/character-assets.tsx - Enhanced character manager with AI portrait generation, tags, favorites, version, search/filter
+- Created /src/components/plot-assets.tsx - Plot management grouped by type (主线/支线/任务线/副本线), status workflow, reorder, tags
+- Created /src/components/scene-assets.tsx - Scene management with atmosphere chips, time-of-day badges, location tags
+- Created /src/components/world-assets.tsx - World setting management with type badges, tags, version display
+- Created /src/components/asset-library.tsx - Cross-project asset browser with project selector, type tabs, import with shallow copy
+- Updated /src/app/page.tsx - Refactored to 3-module architecture (CreationCenter/AssetCenter/Graph)
+- Updated /src/components/sidebar.tsx - 3 core modules navigation (创作中心/项目管理/全景图谱) with creation sub-views
+- Color system per asset type: Characters=rose, Plots=amber, Scenes=orange, World=teal, Outlines=blue
+- All lint checks pass with zero errors
+- All API endpoints tested and operational
+
+Stage Summary:
+- Project Management module fully built as the asset management hub
+- 7 new components created, 4 API routes created, 2 API routes updated
+- 3-module navigation architecture in place (Creation Center / Project Management / Panorama Graph)
+- Asset types: Characters, Plots, Scenes, World Settings, Outlines
+- Cross-project asset library with shallow-copy import
+- AI Portrait Generation integration via z-ai-web-dev-sdk
+- Tags system across all asset types
+- Favorites and version tracking for characters
