@@ -387,3 +387,30 @@ Stage Summary:
 - 三大核心模块全部完成并通过构建验证
 - 部署到 Vercel：https://my-project-five-eta-85.vercel.app
 - 部署ID：dpl_2xCYg41TMnezM7nv3K3pWTU3jMcD (READY)
+
+---
+Task ID: 13
+Agent: Main Agent
+Task: 切换 AI 模型服务 — 从 z-ai-web-dev-sdk 迁移到小米 MiMo 模型服务
+
+Work Log:
+- 收到用户提供的新模型服务配置：API Key + OpenAI 兼容 Base URL (token-plan-sgp.xiaomimimo.com/v1)
+- 查询可用模型列表：mimo-v2-omni, mimo-v2-pro, mimo-v2.5, mimo-v2.5-pro 等 9 个模型
+- 安装 openai npm SDK（替代 z-ai-web-dev-sdk）
+- 创建 /src/lib/ai-client.ts 统一 AI 客户端工具库
+  - 基于 OpenAI SDK + 自定义 Base URL 的单例客户端
+  - createChatCompletionStream() — 流式对话
+  - createChatCompletion() — 非流式对话
+  - generateImage() — AI 图像生成
+  - getAIConfig() — 导出配置供前端使用
+- 重构 /src/app/api/ai/route.ts — 移除 z-ai-web-dev-sdk，使用新客户端的流式接口
+- 重构 /src/app/api/generate-portrait/route.ts — 移除 z-ai-web-dev-sdk，使用新客户端的图像生成接口
+- 更新 .env — 添加 AI_API_KEY, AI_BASE_URL, AI_MODEL 环境变量
+- 验证 API 连通性：mimo-v2.5-pro 普通请求 + 流式请求均正常
+- Next.js 构建验证通过（22个路由，0 错误）
+
+Stage Summary:
+- AI 模型服务成功从 z-ai-web-dev-sdk 切换到小米 MiMo 模型（mimo-v2.5-pro）
+- 新建 ai-client.ts 统一客户端，所有 AI 调用走 OpenAI 兼容协议
+- 项目中不再有任何 z-ai-web-dev-sdk 引用
+- API 连通性 + 流式输出均验证通过
