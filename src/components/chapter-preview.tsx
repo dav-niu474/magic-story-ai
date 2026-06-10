@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Button } from '@/components/ui/button';
-import { Eye, Type, AlignLeft, Minus, Plus, BookOpen } from 'lucide-react';
+import { Eye, Type, AlignLeft, Minus, Plus, BookOpen, MousePointerClick } from 'lucide-react';
 import { useState } from 'react';
 
 interface ChapterPreviewProps {
@@ -15,6 +15,7 @@ interface ChapterPreviewProps {
   emotionTarget?: string;
   emotionArc?: string;
   wordCount: number;
+  hasChapter?: boolean;
 }
 
 /** 将纯文本转为带段落/对话高亮的 HTML */
@@ -26,7 +27,7 @@ function renderContentToHTML(raw: string): string {
   return paragraphs.map(p => {
     const trimmed = p.trim();
     // 对话行（以中文引号开头）
-    if (/^[「"《]/.test(trimmed)) {
+    if (/^[「""《]/.test(trimmed)) {
       return `<p class="chapter-dialogue">${escapeHTML(trimmed)}</p>`;
     }
     // 心理描写（以括号包裹）
@@ -74,6 +75,7 @@ export function ChapterPreview({
   emotionTarget,
   emotionArc,
   wordCount,
+  hasChapter = true,
 }: ChapterPreviewProps) {
   const [fontLevel, setFontLevel] = useState(1); // 0=小, 1=中, 2=大
   const [showMeta, setShowMeta] = useState(true);
@@ -82,6 +84,50 @@ export function ChapterPreview({
   const font = FONT_SIZES[fontLevel];
 
   const emotionStyle = emotionTarget ? EMOTION_COLORS[emotionTarget] || 'text-primary bg-primary/10' : '';
+
+  // 没有选中任何章节
+  if (!hasChapter) {
+    return (
+      <div className="flex flex-col h-full">
+        <div className="flex items-center justify-between px-3 py-2 border-b border-border/50 bg-card/30 shrink-0">
+          <div className="flex items-center gap-2">
+            <Eye size={14} className="text-cyan-400" />
+            <span className="text-xs font-medium text-foreground">实时预览</span>
+          </div>
+        </div>
+        <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground px-6">
+          <div className="w-16 h-16 rounded-2xl bg-cyan-400/10 flex items-center justify-center mb-4">
+            <MousePointerClick size={28} className="text-cyan-400/60" />
+          </div>
+          <p className="text-sm font-medium text-foreground/70 mb-1">选择章节开始预览</p>
+          <p className="text-xs text-muted-foreground/60 text-center leading-relaxed">
+            在左侧章节列表中点击一个章节，<br />
+            即可在此处实时预览排版效果
+          </p>
+          <div className="mt-6 space-y-2 w-full max-w-[200px]">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground/50">
+              <div className="w-5 h-5 rounded bg-cyan-400/10 flex items-center justify-center shrink-0">
+                <span className="text-[10px] text-cyan-400">1</span>
+              </div>
+              <span>点击左侧章节列表</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground/50">
+              <div className="w-5 h-5 rounded bg-cyan-400/10 flex items-center justify-center shrink-0">
+                <span className="text-[10px] text-cyan-400">2</span>
+              </div>
+              <span>在中间编辑区写作</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground/50">
+              <div className="w-5 h-5 rounded bg-cyan-400/10 flex items-center justify-center shrink-0">
+                <span className="text-[10px] text-cyan-400">3</span>
+              </div>
+              <span>右侧实时查看排版效果</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col h-full">
@@ -170,24 +216,38 @@ export function ChapterPreview({
               dangerouslySetInnerHTML={{ __html: contentHTML }}
             />
           ) : (
-            <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-              <AlignLeft size={40} className="mb-3 opacity-20" />
-              <p className="text-sm">开始写作后，这里将实时显示预览</p>
-              <p className="text-xs mt-1 opacity-60">支持对话高亮、段落排版</p>
+            <div className="flex flex-col items-center justify-center py-12 text-muted-foreground">
+              <div className="w-12 h-12 rounded-xl bg-emerald-400/10 flex items-center justify-center mb-3">
+                <AlignLeft size={22} className="text-emerald-400/50" />
+              </div>
+              <p className="text-sm font-medium text-foreground/60 mb-1">开始写作吧</p>
+              <p className="text-xs text-muted-foreground/50 text-center leading-relaxed">
+                在左侧编辑区输入内容，<br />
+                此处将实时预览排版效果
+              </p>
+              <div className="mt-4 flex flex-wrap gap-2">
+                <Badge variant="outline" className="text-[10px] text-cyan-400/60 border-cyan-400/20">
+                  对话高亮
+                </Badge>
+                <Badge variant="outline" className="text-[10px] text-amber-400/60 border-amber-400/20">
+                  段落缩进
+                </Badge>
+                <Badge variant="outline" className="text-[10px] text-purple-400/60 border-purple-400/20">
+                  心理描写
+                </Badge>
+              </div>
             </div>
           )}
         </div>
       </ScrollArea>
 
       {/* Bottom Bar */}
-      {content.trim() && (
-        <div className="px-3 py-1.5 border-t border-border/50 bg-card/30 shrink-0">
-          <div className="flex items-center justify-between text-[10px] text-muted-foreground">
-            <span>{content.length} 字符</span>
-            <span>段落: {content.split(/\n+/).filter(p => p.trim()).length}</span>
-          </div>
+      <div className="px-3 py-1.5 border-t border-border/50 bg-card/30 shrink-0">
+        <div className="flex items-center justify-between text-[10px] text-muted-foreground">
+          <span>{content.length} 字符</span>
+          <span>段落: {content.split(/\n+/).filter(p => p.trim()).length}</span>
         </div>
-      )}
+      </div>
     </div>
   );
 }

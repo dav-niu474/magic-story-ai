@@ -681,10 +681,10 @@ export function ChapterEditor({ projectId }: ChapterEditorProps) {
           )}
         </div>
 
-        {/* Side Panel (Preview / Anti-AI / Adversarial Review) */}
-        {sidePanel !== 'none' && selectedChapter && (
+        {/* Side Panel (Preview / Anti-AI / Adversarial Review) — 始终渲染 */}
+        {sidePanel !== 'none' && (
           <div className="md:col-span-2 min-h-0">
-            <Card className="bg-card/50 border-border/50 h-full flex flex-col overflow-hidden">
+            <Card className="bg-card/50 border-border/50 h-full flex flex-col overflow-hidden" style={{ minHeight: '65vh' }}>
               {sidePanel === 'preview' && (
                 <ChapterPreview
                   title={editTitle}
@@ -693,9 +693,10 @@ export function ChapterEditor({ projectId }: ChapterEditorProps) {
                   emotionTarget={editEmotionTarget}
                   emotionArc={editEmotionArc}
                   wordCount={editContent.length}
+                  hasChapter={!!selectedChapter}
                 />
               )}
-              {sidePanel === 'antiAi' && (
+              {sidePanel === 'antiAi' && selectedChapter && (
                 <AntiAIPanel
                   content={editContent}
                   onApplyFix={(fixedContent) => {
@@ -703,11 +704,23 @@ export function ChapterEditor({ projectId }: ChapterEditorProps) {
                   }}
                 />
               )}
-              {sidePanel === 'adversarial' && (
+              {sidePanel === 'antiAi' && !selectedChapter && (
+                <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground px-6">
+                  <Shield size={28} className="mb-3 opacity-30" />
+                  <p className="text-sm">选择章节后可进行去AI味分析</p>
+                </div>
+              )}
+              {sidePanel === 'adversarial' && selectedChapter && (
                 <AdversarialReviewPanel
                   content={editContent}
                   chapterTitle={editTitle}
                 />
+              )}
+              {sidePanel === 'adversarial' && !selectedChapter && (
+                <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground px-6">
+                  <Swords size={28} className="mb-3 opacity-30" />
+                  <p className="text-sm">选择章节后可进行对抗评审</p>
+                </div>
               )}
             </Card>
           </div>
