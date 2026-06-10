@@ -365,3 +365,25 @@ Stage Summary:
 - AI Portrait Generation integration via z-ai-web-dev-sdk
 - Tags system across all asset types
 - Favorites and version tracking for characters
+Task ID: 10
+Agent: Main Agent
+Task: 三大核心模块重构 - 设计、开发、部署
+
+Work Log:
+- 设计新的 Prisma Schema，新增 Plot/Scene/StoryNode/StoryEdge/ProjectAssetLink 5个模型，扩展 Character 和 AgentLog 字段
+- 安装 @xyflow/react (v12.11.0) 依赖
+- 重构 Zustand Store，从7视图导航改为三大模块导航（creation/assets/graph），新增工具热插拔、图谱筛选、节点选择等状态
+- 构建模块一「创作中心」：通用Agent墨灵 + 13工具热插拔 + SSE流式对话 + 工具调用协议
+- 构建模块二「项目管理」：五类资产管理（角色/剧情/场景/世界观/大纲）+ AI肖像生成 + 标签/收藏/版本 + 跨项目资产库
+- 构建模块三「全景图谱」：React Flow可视化叙事地图 + 6种节点类型 + 4种连线类型 + 自动布局 + 搜索筛选 + 节点下钻详情
+- 重构 Sidebar 为三大模块导航 + 创作中心子导航
+- 重构 page.tsx 主页面布局，集成三大模块
+- 新增6个API路由 + 更新2个现有路由
+- Next.js 构建成功（22个路由）
+- 推送到 GitHub 并部署到 Vercel
+
+Stage Summary:
+- 41个文件变更，6856行新增代码
+- 三大核心模块全部完成并通过构建验证
+- 部署到 Vercel：https://my-project-five-eta-85.vercel.app
+- 部署ID：dpl_2xCYg41TMnezM7nv3K3pWTU3jMcD (READY)
