@@ -1,0 +1,146 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id          String    @id @default(cuid())
+  title       String
+  genre       String    @default("玄幻系统修仙")
+  description String    @default("")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  worldSettings       WorldSetting[]
+  characters          Character[]
+  characterRelations  CharacterRelationship[]
+  outlines            Outline[]
+  chapters            Chapter[]
+  promptTemplates     PromptTemplate[]
+  agentLogs           AgentLog[]
+  storyStates         StoryState[]
+  foreshadowings      Foreshadowing[]
+}
+
+model WorldSetting {
+  id          String  @id @default(cuid())
+  projectId   String
+  name        String
+  description String  @default("")
+  rules       String  @default("")
+  type        String  @default("background")
+  order       Int     @default(0)
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model Character {
+  id          String  @id @default(cuid())
+  projectId   String
+  name        String
+  age         String  @default("")
+  role        String  @default("主角")
+  personality String  @default("")
+  appearance  String  @default("")
+  background  String  @default("")
+  arc         String  @default("")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  fromRelations CharacterRelationship[] @relation("FromCharacter")
+  toRelations   CharacterRelationship[] @relation("ToCharacter")
+}
+
+model CharacterRelationship {
+  id              String  @id @default(cuid())
+  projectId       String
+  fromCharacterId String
+  toCharacterId   String
+  type            String  @default("盟友")
+  description     String  @default("")
+
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  fromCharacter Character @relation("FromCharacter", fields: [fromCharacterId], references: [id], onDelete: Cascade)
+  toCharacter   Character @relation("ToCharacter", fields: [toCharacterId], references: [id], onDelete: Cascade)
+}
+
+model Outline {
+  id        String  @id @default(cuid())
+  projectId String
+  content   String  @default("")
+  version   Int     @default(1)
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model Chapter {
+  id             String  @id @default(cuid())
+  projectId      String
+  order          Int
+  title          String  @default("")
+  outlineContent String  @default("")
+  content        String  @default("")
+  summary        String  @default("")
+  wordCount      Int     @default(0)
+  status         String  @default("draft")
+  emotionTarget  String  @default("")
+  emotionArc     String  @default("")
+  hookStart      String  @default("")
+  hookEnd        String  @default("")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  storyStates StoryState[]
+  foreshadowings Foreshadowing[]
+}
+
+model StoryState {
+  id        String   @id @default(cuid())
+  projectId String
+  chapterId String
+  type      String   @default("character_state")
+  data      String   @default("{}")
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+}
+
+model Foreshadowing {
+  id                String  @id @default(cuid())
+  projectId         String
+  chapterId         String
+  content           String  @default("")
+  expectedResolveChapter Int @default(0)
+  status            String  @default("planted")
+  importance        String  @default("medium")
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+}
+
+model PromptTemplate {
+  id        String  @id @default(cuid())
+  projectId String
+  name      String
+  type      String  @default("general")
+  content   String
+  isDefault Boolean @default(false)
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
+
+model AgentLog {
+  id        String   @id @default(cuid())
+  projectId String
+  agentType String
+  action    String
+  input     String   @default("")
+  output    String   @default("")
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+}
