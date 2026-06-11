@@ -6,6 +6,7 @@ datasource db {
   provider  = "postgresql"
   url      = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
+  schemas  = ["magic_story", "public"]
 }
 
 // ==========================================
@@ -36,6 +37,8 @@ model Project {
   scenes              Scene[]
   plots               Plot[]
   assetLinks          ProjectAssetLink[]
+
+  @@schema("magic_story")
 }
 
 // ==========================================
@@ -53,6 +56,8 @@ model Outline {
   updatedAt DateTime @updatedAt
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@schema("magic_story")
 }
 
 /// 角色资产（含AI生成图片）
@@ -78,6 +83,8 @@ model Character {
 
   fromRelations CharacterRelationship[] @relation("FromCharacter")
   toRelations   CharacterRelationship[] @relation("ToCharacter")
+
+  @@schema("magic_story")
 }
 
 model CharacterRelationship {
@@ -91,6 +98,8 @@ model CharacterRelationship {
   project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   fromCharacter Character @relation("FromCharacter", fields: [fromCharacterId], references: [id], onDelete: Cascade)
   toCharacter   Character @relation("ToCharacter", fields: [toCharacterId], references: [id], onDelete: Cascade)
+
+  @@schema("magic_story")
 }
 
 /// 剧情资产
@@ -109,6 +118,8 @@ model Plot {
   updatedAt   DateTime @updatedAt
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@schema("magic_story")
 }
 
 /// 场景资产
@@ -127,6 +138,8 @@ model Scene {
   updatedAt   DateTime @updatedAt
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@schema("magic_story")
 }
 
 /// 世界观资产
@@ -142,6 +155,8 @@ model WorldSetting {
   version     Int     @default(1)
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@schema("magic_story")
 }
 
 /// 跨项目资产链接（浅拷贝引用）
@@ -154,6 +169,8 @@ model ProjectAssetLink {
   createdAt    DateTime @default(now())
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@schema("magic_story")
 }
 
 // ==========================================
@@ -178,6 +195,8 @@ model Chapter {
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   storyStates StoryState[]
   foreshadowings Foreshadowing[]
+
+  @@schema("magic_story")
 }
 
 model StoryState {
@@ -190,6 +209,8 @@ model StoryState {
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  @@schema("magic_story")
 }
 
 model Foreshadowing {
@@ -203,6 +224,8 @@ model Foreshadowing {
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   chapter Chapter @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+
+  @@schema("magic_story")
 }
 
 // ==========================================
@@ -227,6 +250,8 @@ model StoryNode {
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   sourceEdges StoryEdge[] @relation("SourceNode")
   targetEdges StoryEdge[] @relation("TargetNode")
+
+  @@schema("magic_story")
 }
 
 /// 故事连线
@@ -243,6 +268,8 @@ model StoryEdge {
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
   sourceNode StoryNode @relation("SourceNode", fields: [sourceId], references: [id], onDelete: Cascade)
   targetNode StoryNode @relation("TargetNode", fields: [targetId], references: [id], onDelete: Cascade)
+
+  @@schema("magic_story")
 }
 
 // ==========================================
@@ -258,6 +285,8 @@ model PromptTemplate {
   isDefault Boolean @default(false)
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@schema("magic_story")
 }
 
 model AgentLog {
@@ -271,4 +300,6 @@ model AgentLog {
   createdAt DateTime @default(now())
 
   project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@schema("magic_story")
 }

@@ -1,5 +1,8 @@
+-- CreateSchema
+CREATE SCHEMA IF NOT EXISTS "magic_story";
+
 -- CreateTable
-CREATE TABLE "Project" (
+CREATE TABLE "magic_story"."Project" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "genre" TEXT NOT NULL DEFAULT '玄幻系统修仙',
@@ -12,7 +15,7 @@ CREATE TABLE "Project" (
 );
 
 -- CreateTable
-CREATE TABLE "Outline" (
+CREATE TABLE "magic_story"."Outline" (
     "id" TEXT NOT NULL,
     "projectId" TEXT NOT NULL,
     "content" TEXT NOT NULL DEFAULT '',
@@ -25,7 +28,7 @@ CREATE TABLE "Outline" (
 );
 
 -- CreateTable
-CREATE TABLE "Character" (
+CREATE TABLE "magic_story"."Character" (
     "id" TEXT NOT NULL,
     "projectId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -47,7 +50,7 @@ CREATE TABLE "Character" (
 );
 
 -- CreateTable
-CREATE TABLE "CharacterRelationship" (
+CREATE TABLE "magic_story"."CharacterRelationship" (
     "id" TEXT NOT NULL,
     "projectId" TEXT NOT NULL,
     "fromCharacterId" TEXT NOT NULL,
@@ -59,7 +62,7 @@ CREATE TABLE "CharacterRelationship" (
 );
 
 -- CreateTable
-CREATE TABLE "Plot" (
+CREATE TABLE "magic_story"."Plot" (
     "id" TEXT NOT NULL,
     "projectId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -77,7 +80,7 @@ CREATE TABLE "Plot" (
 );
 
 -- CreateTable
-CREATE TABLE "Scene" (
+CREATE TABLE "magic_story"."Scene" (
     "id" TEXT NOT NULL,
     "projectId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -95,7 +98,7 @@ CREATE TABLE "Scene" (
 );
 
 -- CreateTable
-CREATE TABLE "WorldSetting" (
+CREATE TABLE "magic_story"."WorldSetting" (
     "id" TEXT NOT NULL,
     "projectId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -110,7 +113,7 @@ CREATE TABLE "WorldSetting" (
 );
 
 -- CreateTable
-CREATE TABLE "ProjectAssetLink" (
+CREATE TABLE "magic_story"."ProjectAssetLink" (
     "id" TEXT NOT NULL,
     "projectId" TEXT NOT NULL,
     "assetType" TEXT NOT NULL,
@@ -122,7 +125,7 @@ CREATE TABLE "ProjectAssetLink" (
 );
 
 -- CreateTable
-CREATE TABLE "Chapter" (
+CREATE TABLE "magic_story"."Chapter" (
     "id" TEXT NOT NULL,
     "projectId" TEXT NOT NULL,
     "order" INTEGER NOT NULL,
@@ -141,7 +144,7 @@ CREATE TABLE "Chapter" (
 );
 
 -- CreateTable
-CREATE TABLE "StoryState" (
+CREATE TABLE "magic_story"."StoryState" (
     "id" TEXT NOT NULL,
     "projectId" TEXT NOT NULL,
     "chapterId" TEXT NOT NULL,
@@ -153,7 +156,7 @@ CREATE TABLE "StoryState" (
 );
 
 -- CreateTable
-CREATE TABLE "Foreshadowing" (
+CREATE TABLE "magic_story"."Foreshadowing" (
     "id" TEXT NOT NULL,
     "projectId" TEXT NOT NULL,
     "chapterId" TEXT NOT NULL,
@@ -166,7 +169,7 @@ CREATE TABLE "Foreshadowing" (
 );
 
 -- CreateTable
-CREATE TABLE "StoryNode" (
+CREATE TABLE "magic_story"."StoryNode" (
     "id" TEXT NOT NULL,
     "projectId" TEXT NOT NULL,
     "nodeType" TEXT NOT NULL DEFAULT 'main',
@@ -184,7 +187,7 @@ CREATE TABLE "StoryNode" (
 );
 
 -- CreateTable
-CREATE TABLE "StoryEdge" (
+CREATE TABLE "magic_story"."StoryEdge" (
     "id" TEXT NOT NULL,
     "projectId" TEXT NOT NULL,
     "sourceId" TEXT NOT NULL,
@@ -198,7 +201,7 @@ CREATE TABLE "StoryEdge" (
 );
 
 -- CreateTable
-CREATE TABLE "PromptTemplate" (
+CREATE TABLE "magic_story"."PromptTemplate" (
     "id" TEXT NOT NULL,
     "projectId" TEXT NOT NULL,
     "name" TEXT NOT NULL,
@@ -210,7 +213,7 @@ CREATE TABLE "PromptTemplate" (
 );
 
 -- CreateTable
-CREATE TABLE "AgentLog" (
+CREATE TABLE "magic_story"."AgentLog" (
     "id" TEXT NOT NULL,
     "projectId" TEXT NOT NULL,
     "agentType" TEXT NOT NULL,
@@ -224,61 +227,61 @@ CREATE TABLE "AgentLog" (
 );
 
 -- AddForeignKey
-ALTER TABLE "Outline" ADD CONSTRAINT "Outline_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "magic_story"."Outline" ADD CONSTRAINT "Outline_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "magic_story"."Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Character" ADD CONSTRAINT "Character_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "magic_story"."Character" ADD CONSTRAINT "Character_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "magic_story"."Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "CharacterRelationship" ADD CONSTRAINT "CharacterRelationship_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "magic_story"."CharacterRelationship" ADD CONSTRAINT "CharacterRelationship_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "magic_story"."Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "CharacterRelationship" ADD CONSTRAINT "CharacterRelationship_fromCharacterId_fkey" FOREIGN KEY ("fromCharacterId") REFERENCES "Character"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "magic_story"."CharacterRelationship" ADD CONSTRAINT "CharacterRelationship_fromCharacterId_fkey" FOREIGN KEY ("fromCharacterId") REFERENCES "magic_story"."Character"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "CharacterRelationship" ADD CONSTRAINT "CharacterRelationship_toCharacterId_fkey" FOREIGN KEY ("toCharacterId") REFERENCES "Character"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "magic_story"."CharacterRelationship" ADD CONSTRAINT "CharacterRelationship_toCharacterId_fkey" FOREIGN KEY ("toCharacterId") REFERENCES "magic_story"."Character"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Plot" ADD CONSTRAINT "Plot_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "magic_story"."Plot" ADD CONSTRAINT "Plot_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "magic_story"."Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Scene" ADD CONSTRAINT "Scene_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "magic_story"."Scene" ADD CONSTRAINT "Scene_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "magic_story"."Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "WorldSetting" ADD CONSTRAINT "WorldSetting_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "magic_story"."WorldSetting" ADD CONSTRAINT "WorldSetting_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "magic_story"."Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "ProjectAssetLink" ADD CONSTRAINT "ProjectAssetLink_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "magic_story"."ProjectAssetLink" ADD CONSTRAINT "ProjectAssetLink_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "magic_story"."Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Chapter" ADD CONSTRAINT "Chapter_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "magic_story"."Chapter" ADD CONSTRAINT "Chapter_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "magic_story"."Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "StoryState" ADD CONSTRAINT "StoryState_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "magic_story"."StoryState" ADD CONSTRAINT "StoryState_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "magic_story"."Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "StoryState" ADD CONSTRAINT "StoryState_chapterId_fkey" FOREIGN KEY ("chapterId") REFERENCES "Chapter"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "magic_story"."StoryState" ADD CONSTRAINT "StoryState_chapterId_fkey" FOREIGN KEY ("chapterId") REFERENCES "magic_story"."Chapter"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Foreshadowing" ADD CONSTRAINT "Foreshadowing_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "magic_story"."Foreshadowing" ADD CONSTRAINT "Foreshadowing_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "magic_story"."Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "Foreshadowing" ADD CONSTRAINT "Foreshadowing_chapterId_fkey" FOREIGN KEY ("chapterId") REFERENCES "Chapter"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "magic_story"."Foreshadowing" ADD CONSTRAINT "Foreshadowing_chapterId_fkey" FOREIGN KEY ("chapterId") REFERENCES "magic_story"."Chapter"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "StoryNode" ADD CONSTRAINT "StoryNode_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "magic_story"."StoryNode" ADD CONSTRAINT "StoryNode_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "magic_story"."Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "StoryEdge" ADD CONSTRAINT "StoryEdge_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "magic_story"."StoryEdge" ADD CONSTRAINT "StoryEdge_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "magic_story"."Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "StoryEdge" ADD CONSTRAINT "StoryEdge_sourceId_fkey" FOREIGN KEY ("sourceId") REFERENCES "StoryNode"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "magic_story"."StoryEdge" ADD CONSTRAINT "StoryEdge_sourceId_fkey" FOREIGN KEY ("sourceId") REFERENCES "magic_story"."StoryNode"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "StoryEdge" ADD CONSTRAINT "StoryEdge_targetId_fkey" FOREIGN KEY ("targetId") REFERENCES "StoryNode"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "magic_story"."StoryEdge" ADD CONSTRAINT "StoryEdge_targetId_fkey" FOREIGN KEY ("targetId") REFERENCES "magic_story"."StoryNode"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "PromptTemplate" ADD CONSTRAINT "PromptTemplate_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "magic_story"."PromptTemplate" ADD CONSTRAINT "PromptTemplate_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "magic_story"."Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "AgentLog" ADD CONSTRAINT "AgentLog_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+ALTER TABLE "magic_story"."AgentLog" ADD CONSTRAINT "AgentLog_projectId_fkey" FOREIGN KEY ("projectId") REFERENCES "magic_story"."Project"("id") ON DELETE CASCADE ON UPDATE CASCADE;
