@@ -6,7 +6,7 @@ datasource db {
   provider  = "postgresql"
   url      = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
-  schemas  = ["magic_story", "public"]
+  schemas  = ["magic_story"]
 }
 
 // ==========================================
